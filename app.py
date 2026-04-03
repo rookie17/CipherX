@@ -56,21 +56,20 @@ def process():
 
 @app.route('/brute', methods=['POST'])
 def brute():
-    """
-    Brute-force route: tries all 26 shifts and returns ranked results.
-    The user doesn't need to know the shift — we figure out the best guess.
-    """
-
     text = request.form.get('brute_text', '')
 
-    # Basic validation — nothing to do if the box is empty
     if not text.strip():
         return render_template('index.html', result=None, error="Please enter some text to brute-force.", brute_results=None)
 
-    # Run all 26 shifts and get them ranked by score
-    brute_results = brute_force_caesar(text)
+    # Read the keywords field, split on commas, clean up whitespace
+    raw_keywords = request.form.get('keywords', '')
+    keywords = [kw.strip() for kw in raw_keywords.split(',') if kw.strip()]
 
-    return render_template('index.html', result=None, error=None, brute_results=brute_results, original=text)
+    brute_results = brute_force_caesar(text, keywords)
+
+    return render_template('index.html', result=None, error=None,
+                           brute_results=brute_results, original=text,
+                           keywords=raw_keywords)
 
 if __name__ == '__main__':
     # debug=True auto-reloads the server when you save a file — very handy during development

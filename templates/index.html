@@ -73,6 +73,13 @@
     <textarea name="brute_text" id="brute_text" rows="4"
               placeholder="Paste ciphertext here — shift unknown...">{% if brute_results %}{{ original }}{% endif %}</textarea>
   </div>
+  <div class="field">
+  <label for="keywords">Keywords (optional, comma-separated)</label>
+  <input type="text" name="keywords" id="keywords"
+         placeholder="e.g. hello, secret, attack"
+         value="{{ keywords if keywords else '' }}" />
+  <span class="hint">Words you expect to find in the decoded message</span>
+</div>
   <button type="submit">Brute Force All 26 Shifts</button>
 </form>
 

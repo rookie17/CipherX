@@ -79,29 +79,58 @@ def word_score(text):
             count += 1
     return count
 
+# Add this after word_score() 
 
-def combined_score(text):
+def keyword_score(text, keywords):
     """
-    Blends frequency analysis with word matching.
+    Checks how many user-supplied keywords appear in the decoded text.
 
-    Weights:
-        Frequency score  — good for short or garbled text with few real words
-        Word score x 10  — heavily rewarded when real words appear
-                           (multiplied so it can outweigh frequency noise)
+    Args:
+        text     (str): Decoded candidate.
+        keywords (list of str): Words the user expects to find.
 
-    Both signals together are more reliable than either alone.
+    Returns:
+        int: Count of matched keywords.
+
+    Each match adds 1. Caller decides the weight multiplier.
+    Matching is case-insensitive and whole-word only — "hell" won't
+    match inside "hello" because we split on whitespace first.
     """
-    freq  = frequency_score(text)
-    words = word_score(text) * 10
-    return freq + words
+    if not keywords:
+        return 0
+
+    lowered = text.lower()
+    tokens  = set(lowered.split())  # set for O(1) lookup
+    count   = 0
+
+    for kw in keywords:
+        if kw.strip().lower() in tokens:
+            count += 1
+
+    return count
 
 
-def brute_force_caesar(ciphertext):
+def combined_score(text, keywords=None):
+    """
+    Three signals, each weighted by reliability:
+
+        Frequency score  — always active, best for short/noisy text
+        Word score x10   — rewards real English words
+        Keyword score x20 — heavily rewards user-supplied hints
+                            (20x because a keyword match is near-certain signal)
+    """
+    freq    = frequency_score(text)
+    words   = word_score(text) * 10
+    kws     = keyword_score(text, keywords or []) * 20
+    return freq + words + kws
+
+
+def brute_force_caesar(ciphertext, keywords=None):
     results = []
 
     for shift in range(26):
         decoded = caesar_decode(ciphertext, shift)
-        score   = combined_score(decoded)
+        score   = combined_score(decoded, keywords)
 
         results.append({
             "shift":   shift,

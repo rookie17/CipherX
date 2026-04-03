@@ -190,3 +190,10 @@ tr.top-result .decoded-cell {
 tbody tr:hover {
   background: #1a1a1a;
 }
+
+.hint {
+  display: block;
+  font-size: 0.78rem;
+  color: #555;
+  margin-top: 0.3rem;
+}
