@@ -216,5 +216,127 @@
   updateFields(); // Run once on load to set correct initial state
 </script>
 
+<!-- ─── SEGMENT SHIFT SECTION ─── -->
+<hr class="divider" />
+
+<h2 class="section-title">🧩 Segment-Based Shift</h2>
+<p class="subtitle">Text is split into fixed-size blocks — each block gets its own Caesar shift.</p>
+
+<form action="/segment" method="POST">
+
+  <div class="field">
+    <label for="seg_text">Text</label>
+    <textarea name="seg_text" id="seg_text" rows="4"
+              placeholder="Plain text to encode, or ciphertext to decode/brute-force...">
+      {{- seg_original if seg_original else '' -}}
+    </textarea>
+  </div>
+
+  <div class="field">
+    <label>Mode</label>
+    <div class="radio-group">
+      <label><input type="radio" name="seg_mode" value="brute"  checked /> Brute Force</label>
+      <label><input type="radio" name="seg_mode" value="encode" /> Encode</label>
+      <label><input type="radio" name="seg_mode" value="decode" /> Decode</label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="seg_size">Segment Size (characters per block)</label>
+    <input type="number" name="seg_size" id="seg_size" min="1" max="100" value="5" />
+  </div>
+
+  <!-- Known-key fields -->
+  <div id="seg-key-fields">
+    <div class="field">
+      <label for="seg_shifts">Shifts (comma-separated, one per segment)</label>
+      <input type="text" name="seg_shifts" id="seg_shifts"
+             placeholder="e.g. 3, 7, 12"
+             value="{{ seg_shifts if seg_shifts else '3,7' }}" />
+      <span class="hint">Cycles if there are more segments than shifts supplied</span>
+    </div>
+  </div>
+
+  <!-- Brute force fields -->
+  <div id="seg-brute-fields">
+    <div class="field">
+      <label for="num_shifts">Number of Distinct Shifts to Try</label>
+      <select name="num_shifts" id="num_shifts">
+        <option value="1">1 shift — 26 combinations</option>
+        <option value="2" selected>2 shifts — 676 combinations</option>
+        <option value="3">3 shifts — 17,576 combinations (slow)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="seg_keywords">Keywords (optional)</label>
+      <input type="text" name="seg_keywords" id="seg_keywords"
+             placeholder="e.g. launch, target"
+             value="{{ seg_keywords if seg_keywords else '' }}" />
+    </div>
+  </div>
+
+  <button type="submit">Run</button>
+</form>
+
+<!-- Warning + candidate count -->
+{% if total_candidates %}
+<p class="hint" style="margin-top:0.75rem;">
+  Searched {{ "{:,}".format(total_candidates) }} combinations.
+</p>
+{% endif %}
+
+<!-- Known-key result -->
+{% if seg_result %}
+<div class="result-box">
+  <h2>Result</h2>
+  <p class="meta">
+    {{ seg_mode | capitalize }} · Segment size {{ seg_size }} · Shifts [{{ seg_shifts }}]
+  </p>
+  <div class="result-text">{{ seg_result }}</div>
+</div>
+{% endif %}
+
+<!-- Brute force results table -->
+{% if seg_results %}
+<div class="brute-results">
+  <h3>Top Results <span class="meta">(top 10 ranked best → worst)</span></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Shifts</th>
+        <th>Score</th>
+        <th>Decoded Text</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in seg_results %}
+      <tr class="{{ 'top-result' if loop.index == 1 else '' }}">
+        <td>{{ loop.index }}</td>
+        <td>{{ item.shifts | join(', ') }}</td>
+        <td>{{ item.score }}</td>
+        <td class="decoded-cell">{{ item.decoded }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<script>
+  const segRadios    = document.querySelectorAll('input[name="seg_mode"]');
+  const segKeyFields = document.getElementById('seg-key-fields');
+  const segBruteFields = document.getElementById('seg-brute-fields');
+
+  function updateSegFields() {
+    const mode = document.querySelector('input[name="seg_mode"]:checked').value;
+    segKeyFields.style.display   = (mode === 'brute') ? 'none'  : 'block';
+    segBruteFields.style.display = (mode === 'brute') ? 'block' : 'none';
+  }
+
+  segRadios.forEach(r => r.addEventListener('change', updateSegFields));
+  updateSegFields();
+</script>
+
 </body>
 </html>

@@ -6,6 +6,7 @@ from flask import Flask, render_template, request
 from engine.caesar import caesar_encode, caesar_decode
 from engine.analyzer import brute_force_caesar
 from engine.progressive import brute_force_progressive, progressive_encode, progressive_decode
+from engine.segment import segment_encode, segment_decode, brute_force_segment, estimate_brute_force_size
 
 app = Flask(__name__)
 
@@ -110,6 +111,64 @@ def progressive():
     return render_template('index.html', result=None, error=None,
                            prog_results=prog_results, prog_original=text,
                            prog_keywords=raw_kws)
+
+@app.route('/segment', methods=['POST'])
+def segment():
+    text = request.form.get('seg_text', '')
+    mode = request.form.get('seg_mode', 'brute')  # 'encode', 'decode', 'brute'
+
+    if not text.strip():
+        return render_template('index.html', result=None,
+                               error="Please enter some text.", seg_results=None)
+
+    # Parse segment size — shared across all modes
+    try:
+        seg_size = int(request.form.get('seg_size', 5))
+        if seg_size < 1:
+            raise ValueError
+    except ValueError:
+        return render_template('index.html', result=None,
+                               error="Segment size must be a positive whole number.", seg_results=None)
+
+    # ── Known-key encode / decode ──
+    if mode in ('encode', 'decode'):
+        raw_shifts = request.form.get('seg_shifts', '3,7')
+        try:
+            shifts = [int(s.strip()) for s in raw_shifts.split(',') if s.strip()]
+            if not shifts or any(not (0 <= s <= 25) for s in shifts):
+                raise ValueError
+        except ValueError:
+            return render_template('index.html', result=None,
+                                   error="Shifts must be comma-separated numbers between 0 and 25.", seg_results=None)
+
+        if mode == 'encode':
+            seg_result = segment_encode(text, seg_size, shifts)
+        else:
+            seg_result = segment_decode(text, seg_size, shifts)
+
+        return render_template('index.html', result=None, error=None,
+                               seg_result=seg_result, seg_mode=mode,
+                               seg_size=seg_size, seg_shifts=raw_shifts)
+
+    # ── Brute force ──
+    try:
+        num_shifts = int(request.form.get('num_shifts', 2))
+        if not (1 <= num_shifts <= 3):
+            raise ValueError
+    except ValueError:
+        return render_template('index.html', result=None,
+                               error="Number of shifts must be 1, 2, or 3 for brute force.", seg_results=None)
+
+    raw_kws  = request.form.get('seg_keywords', '')
+    keywords = [kw.strip() for kw in raw_kws.split(',') if kw.strip()]
+
+    total_candidates = estimate_brute_force_size(num_shifts)
+    seg_results      = brute_force_segment(text, seg_size, num_shifts, keywords)
+
+    return render_template('index.html', result=None, error=None,
+                           seg_results=seg_results, seg_original=text,
+                           seg_keywords=raw_kws, seg_size=seg_size,
+                           total_candidates=total_candidates)
 
 if __name__ == '__main__':
     # debug=True auto-reloads the server when you save a file — very handy during development
