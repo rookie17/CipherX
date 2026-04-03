@@ -124,3 +124,69 @@ button:hover { background: #00cc77; }
   line-height: 1.6;
   color: #e0e0e0;
 }
+
+/* ─── Phase 2: Brute Force Table ─── */
+
+.divider {
+  border: none;
+  border-top: 1px solid #222;
+  margin: 2.5rem 0;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  color: #00ff99;
+  margin-bottom: 0.25rem;
+}
+
+.brute-results {
+  margin-top: 2rem;
+}
+
+.brute-results h3 {
+  color: #aaa;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+thead tr {
+  background: #1a1a1a;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+th, td {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #222;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Highlight the top-ranked result */
+tr.top-result {
+  background: #0a2a1a;
+  border-left: 3px solid #00ff99;
+  color: #00ff99;
+}
+
+tr.top-result .decoded-cell {
+  color: #00ff99;
+  font-weight: bold;
+}
+
+.decoded-cell {
+  word-break: break-word;
+  max-width: 320px;
+  color: #ccc;
+}
+
+tbody tr:hover {
+  background: #1a1a1a;
+}

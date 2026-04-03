@@ -61,6 +61,47 @@
         <div class="result-text">{{ result }}</div>
       </div>
     {% endif %}
+    <!-- ─── BRUTE FORCE SECTION ─── -->
+<hr class="divider" />
+
+<h2 class="section-title">🔍 Brute Force (Shift Unknown)</h2>
+<p class="subtitle">Tries all 26 shifts and ranks them by likely English content.</p>
+
+<form action="/brute" method="POST">
+  <div class="field">
+    <label for="brute_text">Encrypted Text</label>
+    <textarea name="brute_text" id="brute_text" rows="4"
+              placeholder="Paste ciphertext here — shift unknown...">{% if brute_results %}{{ original }}{% endif %}</textarea>
+  </div>
+  <button type="submit">Brute Force All 26 Shifts</button>
+</form>
+
+<!-- Results table — only shown after a brute-force run -->
+{% if brute_results %}
+<div class="brute-results">
+  <h3>Results <span class="meta">(ranked best → worst)</span></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Shift</th>
+        <th>Score</th>
+        <th>Decoded Text</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in brute_results %}
+      <tr class="{{ 'top-result' if loop.index == 1 else '' }}">
+        <td>{{ loop.index }}</td>
+        <td>{{ item.shift }}</td>
+        <td>{{ item.score }}</td>
+        <td class="decoded-cell">{{ item.decoded }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 
   </div>
 
