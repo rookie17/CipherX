@@ -7,6 +7,7 @@ from engine.caesar import caesar_encode, caesar_decode
 from engine.analyzer import brute_force_caesar
 from engine.progressive import brute_force_progressive, progressive_encode, progressive_decode
 from engine.segment import segment_encode, segment_decode, brute_force_segment, estimate_brute_force_size
+from engine.noise_handler import denoise_and_decode, detect_noise_profile, NOISE_PROFILES
 
 app = Flask(__name__)
 
@@ -169,6 +170,34 @@ def segment():
                            seg_results=seg_results, seg_original=text,
                            seg_keywords=raw_kws, seg_size=seg_size,
                            total_candidates=total_candidates)
+
+@app.route('/denoise', methods=['POST'])
+def denoise():
+    text = request.form.get('noisy_text', '')
+
+    if not text.strip():
+        return render_template('index.html', result=None,
+                               error="Please enter some text.", noise_result=None)
+
+    raw_kws  = request.form.get('noise_keywords', '')
+    keywords = [kw.strip() for kw in raw_kws.split(',') if kw.strip()]
+
+    try:
+        nth = int(request.form.get('nth', 2))
+        if nth < 2:
+            raise ValueError
+    except ValueError:
+        return render_template('index.html', result=None,
+                               error="N must be 2 or greater.", noise_result=None)
+
+    detected     = detect_noise_profile(text)
+    noise_result = denoise_and_decode(text, keywords, nth)
+
+    return render_template('index.html', result=None, error=None,
+                           noise_result=noise_result,
+                           noise_original=text,
+                           noise_detected=detected,
+                           noise_keywords=raw_kws)
 
 if __name__ == '__main__':
     # debug=True auto-reloads the server when you save a file — very handy during development

@@ -337,6 +337,95 @@
   segRadios.forEach(r => r.addEventListener('change', updateSegFields));
   updateSegFields();
 </script>
+<!-- ─── NOISE-RESILIENT DECODER ─── -->
+<hr class="divider" />
+
+<h2 class="section-title">🧹 Noise-Resilient Decoder</h2>
+<p class="subtitle">
+  Strips injected noise characters, then brute-forces the clean ciphertext.
+  Tries multiple stripping strategies and picks the best result.
+</p>
+
+<form action="/denoise" method="POST">
+
+  <div class="field">
+    <label for="noisy_text">Noisy Ciphertext</label>
+    <textarea name="noisy_text" id="noisy_text" rows="4"
+              placeholder="e.g. Kh#oo!r Z3ru*og  or  AxBxCxDx">
+      {{- noise_original if noise_original else '' -}}
+    </textarea>
+  </div>
+
+  <div class="field">
+    <label for="nth">Every-Nth Value</label>
+    <input type="number" name="nth" id="nth" min="2" max="10" value="2" />
+    <span class="hint">
+      For "every N-th letter is real" noise patterns. Try 2 or 3.
+    </span>
+  </div>
+
+  <div class="field">
+    <label for="noise_keywords">Keywords (optional)</label>
+    <input type="text" name="noise_keywords" id="noise_keywords"
+           placeholder="e.g. hello, agent"
+           value="{{ noise_keywords if noise_keywords else '' }}" />
+  </div>
+
+  <button type="submit">Strip Noise + Decode</button>
+</form>
+
+{% if noise_result %}
+
+  {% if noise_detected %}
+  <p class="hint" style="margin-top:1rem;">
+    Auto-detected noise profile: <strong style="color:#00ff99;">{{ noise_detected }}</strong>
+  </p>
+  {% endif %}
+
+  <!-- Best result callout -->
+  {% if noise_result.best %}
+  <div class="result-box" style="margin-top:1.25rem;">
+    <h2>Best Result</h2>
+    <p class="meta">
+      Profile: {{ noise_result.best.profile }} ·
+      Shift {{ noise_result.best.shift }} ·
+      Score {{ noise_result.best.score }}
+    </p>
+    <p class="hint">Cleaned: <em>{{ noise_result.best.cleaned }}</em></p>
+    <div class="result-text">{{ noise_result.best.decoded }}</div>
+  </div>
+  {% endif %}
+
+  <!-- All profiles table -->
+  {% if noise_result.by_profile %}
+  <div class="brute-results" style="margin-top:1.5rem;">
+    <h3>All Profiles Tried <span class="meta">(ranked best → worst)</span></h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Profile</th>
+          <th>Shift</th>
+          <th>Score</th>
+          <th>Decoded</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in noise_result.by_profile %}
+        <tr class="{{ 'top-result' if loop.index == 1 else '' }}">
+          <td>{{ loop.index }}</td>
+          <td>{{ item.profile }}</td>
+          <td>{{ item.shift }}</td>
+          <td>{{ item.score }}</td>
+          <td class="decoded-cell">{{ item.decoded }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+{% endif %}
 
 </body>
 </html>
