@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CipherX</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1>🔐 CipherX</h1>
+    <p class="subtitle">Phase 1 — Caesar Cipher</p>
+
+    <form action="/process" method="POST">
+
+      <!-- Cipher selector (only Caesar for now) -->
+      <div class="field">
+        <label for="cipher">Cipher</label>
+        <select name="cipher" id="cipher">
+          <option value="caesar">Caesar</option>
+        </select>
+      </div>
+
+      <!-- Encode or Decode -->
+      <div class="field">
+        <label>Operation</label>
+        <div class="radio-group">
+          <label><input type="radio" name="operation" value="encode" checked /> Encode</label>
+          <label><input type="radio" name="operation" value="decode" /> Decode</label>
+        </div>
+      </div>
+
+      <!-- Shift amount -->
+      <div class="field">
+        <label for="shift">Shift (1–25)</label>
+        <input type="number" name="shift" id="shift" min="1" max="25" value="3" />
+      </div>
+
+      <!-- Input text -->
+      <div class="field">
+        <label for="text">Your Text</label>
+        <textarea name="text" id="text" rows="4" placeholder="Type your message here..."></textarea>
+      </div>
+
+      <button type="submit">Run Cipher</button>
+    </form>
+
+    <!-- Error message (shown only if Flask sends one) -->
+    {% if error %}
+      <div class="error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <!-- Result block (shown only after a successful operation) -->
+    {% if result %}
+      <div class="result-box">
+        <h2>Result</h2>
+        <p class="meta">
+          {{ operation | capitalize }} · Shift {{ shift }}
+        </p>
+        <div class="result-text">{{ result }}</div>
+      </div>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>
