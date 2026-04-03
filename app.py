@@ -5,6 +5,7 @@
 from flask import Flask, render_template, request
 from engine.caesar import caesar_encode, caesar_decode
 from engine.analyzer import brute_force_caesar
+from engine.progressive import brute_force_progressive, progressive_encode, progressive_decode
 
 app = Flask(__name__)
 
@@ -70,6 +71,45 @@ def brute():
     return render_template('index.html', result=None, error=None,
                            brute_results=brute_results, original=text,
                            keywords=raw_keywords)
+
+@app.route('/progressive', methods=['POST'])
+def progressive():
+    text      = request.form.get('prog_text', '')
+    mode      = request.form.get('prog_mode', 'brute')   # 'brute', 'encode', 'decode'
+    raw_kws   = request.form.get('prog_keywords', '')
+    keywords  = [kw.strip() for kw in raw_kws.split(',') if kw.strip()]
+
+    if not text.strip():
+        return render_template('index.html', result=None, error="Please enter some text.",
+                               prog_results=None)
+
+    # Known-key encode/decode path
+    if mode in ('encode', 'decode'):
+        try:
+            start = int(request.form.get('prog_start', 0))
+            step  = int(request.form.get('prog_step', 1))
+            if not (0 <= start <= 25 and 0 <= step <= 25):
+                raise ValueError
+        except ValueError:
+            return render_template('index.html', result=None,
+                                   error="Start and step must be whole numbers between 0 and 25.",
+                                   prog_results=None)
+
+        if mode == 'encode':
+            prog_result = progressive_encode(text, start, step)
+        else:
+            prog_result = progressive_decode(text, start, step)
+
+        return render_template('index.html', result=None, error=None,
+                               prog_result=prog_result, prog_mode=mode,
+                               prog_start=start, prog_step=step)
+
+    # Brute force path — start and step unknown
+    prog_results = brute_force_progressive(text, keywords)
+
+    return render_template('index.html', result=None, error=None,
+                           prog_results=prog_results, prog_original=text,
+                           prog_keywords=raw_kws)
 
 if __name__ == '__main__':
     # debug=True auto-reloads the server when you save a file — very handy during development

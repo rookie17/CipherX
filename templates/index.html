@@ -111,6 +111,110 @@
 {% endif %}
 
   </div>
+  <!-- ─── PROGRESSIVE SHIFT SECTION ─── -->
+<hr class="divider" />
+
+<h2 class="section-title">📈 Progressive Shift</h2>
+<p class="subtitle">Each letter is shifted by a different amount (start + position × step).</p>
+
+<form action="/progressive" method="POST">
+
+  <div class="field">
+    <label for="prog_text">Text</label>
+    <textarea name="prog_text" id="prog_text" rows="4"
+              placeholder="Plain text to encode, or ciphertext to decode/brute-force...">
+      {{- prog_original if prog_original else '' -}}
+    </textarea>
+  </div>
+
+  <!-- Mode selector drives which fields are shown -->
+  <div class="field">
+    <label>Mode</label>
+    <div class="radio-group">
+      <label><input type="radio" name="prog_mode" value="brute"  checked /> Brute Force</label>
+      <label><input type="radio" name="prog_mode" value="encode" /> Encode</label>
+      <label><input type="radio" name="prog_mode" value="decode" /> Decode</label>
+    </div>
+  </div>
+
+  <!-- Known-key fields — hidden when brute force is selected -->
+  <div id="prog-key-fields">
+    <div class="field">
+      <label for="prog_start">Start Shift (0–25)</label>
+      <input type="number" name="prog_start" id="prog_start" min="0" max="25" value="0" />
+    </div>
+    <div class="field">
+      <label for="prog_step">Step (0–25)</label>
+      <input type="number" name="prog_step" id="prog_step" min="0" max="25" value="1" />
+      <span class="hint">How much the shift increases per letter</span>
+    </div>
+  </div>
+
+  <!-- Keywords for brute force scoring -->
+  <div id="prog-keyword-field" class="field">
+    <label for="prog_keywords">Keywords (optional)</label>
+    <input type="text" name="prog_keywords" id="prog_keywords"
+           placeholder="e.g. agent, rendezvous"
+           value="{{ prog_keywords if prog_keywords else '' }}" />
+  </div>
+
+  <button type="submit">Run</button>
+</form>
+
+<!-- Known-key result -->
+{% if prog_result %}
+<div class="result-box">
+  <h2>Result</h2>
+  <p class="meta">{{ prog_mode | capitalize }} · Start {{ prog_start }} · Step {{ prog_step }}</p>
+  <div class="result-text">{{ prog_result }}</div>
+</div>
+{% endif %}
+
+<!-- Brute force results table -->
+{% if prog_results %}
+<div class="brute-results">
+  <h3>Top Results <span class="meta">(ranked best → worst, top 10 of 676)</span></h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Start</th>
+        <th>Step</th>
+        <th>Score</th>
+        <th>Decoded Text</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in prog_results %}
+      <tr class="{{ 'top-result' if loop.index == 1 else '' }}">
+        <td>{{ loop.index }}</td>
+        <td>{{ item.start }}</td>
+        <td>{{ item.step }}</td>
+        <td>{{ item.score }}</td>
+        <td class="decoded-cell">{{ item.decoded }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- JS: toggle key fields based on mode selection -->
+<script>
+  const radios    = document.querySelectorAll('input[name="prog_mode"]');
+  const keyFields = document.getElementById('prog-key-fields');
+  const kwField   = document.getElementById('prog-keyword-field');
+
+  function updateFields() {
+    const mode = document.querySelector('input[name="prog_mode"]:checked').value;
+    // Show key fields only for encode/decode; show keywords only for brute force
+    keyFields.style.display = (mode === 'brute')  ? 'none'  : 'block';
+    kwField.style.display   = (mode === 'brute')  ? 'block' : 'none';
+  }
+
+  radios.forEach(r => r.addEventListener('change', updateFields));
+  updateFields(); // Run once on load to set correct initial state
+</script>
 
 </body>
 </html>
